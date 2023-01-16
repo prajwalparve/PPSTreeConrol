@@ -78,6 +78,8 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
 
     private _container: HTMLDivElement;
     private _text: HTMLTextAreaElement;
+    private tree: HTMLDivElement;
+
     private _notifyOutputChanged: () => void;
     private _value: any;
     private _context: ComponentFramework.Context<IInputs>;
@@ -132,29 +134,74 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
         await this.getPrograms();
         for(let i=0; i<this._programs.length; i++){
                await this.getProductServices(this._programs[i]);
+               for(let j = 0; j<this._programs[i].productService.length; j++){
+                    if(this._programs[i].productService[j].isProduct)
+                        await this.getProductChildServices(this._programs[i].productService[j]);
+               }
         }
 
-        var text = <HTMLTextAreaElement> document.createElement("TEXTAREA");
-        text.setAttribute('id', 'textarea');
-        this._text = text;
+       
+        
+
+
+        
+
+        
 
         var data = "";
 
         for(let i = 0; i<this._programs.length; i++){
 
-            data = data + this._programs[i].programName+'\r\n';
+            data = data + "<li><details>";
+
+            data = data +  "<summary>"+ this._programs[i].programName +" (Program) </summary> ";
+            
+            data  = data + "<ul>";
+
             for(let j=0; j<this._programs[i].productService.length; j++){
-                    data = data + "|------>" + this._programs[i].productService[j].productServiceName+'\r\n';
+
+
+                    //data = data + "|------>" + this._programs[i].productService[j].productServiceName+'\r\n';
+                    data = data + "<li>" + this._programs[i].productService[j].productServiceName +"</li>";
+
                     if(this._programs[i].productService[j].isProduct)
+                    {
+                        data  = data + "<ul>";
                         for(let k=0;k<this._programs[i].productService[j].childServices.length;k++){
-                            data = data + "       "+"|------>" + this._programs[i].productService[j].childServices[k].productServiceName+'\r\n';
-                        }                   
+                           // data = data + "       "+"|------>" + this._programs[i].productService[j].childServices[k].productServiceName+'\r\n';
+                            data = data + "<li>" + this._programs[i].productService[j].childServices[k].productServiceName +" (Service)</li>";
+                        }  
+                        data  = data + "</ul>";                 
+                    }
             }
+
+            data  = data + "</ul>";
+        
+            data = data + "</details></li>";
 
         }
 
-        this._text.value = data;
-        this._container.appendChild(text);
+        
+
+
+        var str = `
+                        <ul class="tree">
+                        <li>
+                            <details open>
+                            <summary>Giant planets (Account)</summary> 
+                            <ul>`
+                             +   data +
+                            `</ul>
+                            </details>
+                        </li>
+                        </ul>
+
+       `
+
+         this.tree =  document.createElement("div");
+         this.tree.innerHTML = str;
+
+        this._container.appendChild(this.tree);
         
 
     }
@@ -207,12 +254,15 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
 
    
 
-   public async addToProgramProductArray(p:Program, ps:ProductService){
-    
-    if(ps.isProduct)
-       await this.getProductChildServices(ps);
+   public addToProgramProductArray(p:Program, ps:ProductService){
 
     p.productService.push(ps);
+
+   }
+
+   public addToProductChildServiceArray(s:ProductService,ps:ProductService){
+
+    ps.childServices.push(s);
 
    }
    
@@ -269,7 +319,7 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
 
                                         const ps = new ProductService();
                                         ps.productServiceName = response.entities[j].name;
-                                        ps.isProduct = (response.entities[j].name == "100000000") ? false : true;
+                                        ps.isProduct = (response.entities[j].new_type == "100000000") ? false : true;
                                         ps.productServiceId = response.entities[j].productid;
 
 
@@ -318,7 +368,7 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
             function (response: ComponentFramework.WebApi.RetrieveMultipleResponse) {
                 // Retrieve multiple completed successfully -- retrieve the averageValue 
                 for( let l = 0; l < response.entities.length; l++){
-                    thisRef.addToAssociateChildProductArray(response.entities[l].productid);
+                    thisRef.addToAssociateChildProductArray(response.entities[l].productidtwo);
                 }
             
             },
@@ -351,7 +401,8 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
                                 s.productServiceName = response.entities[j].name;
                                 s.isProduct = (response.entities[j].name == "100000000") ? true : false;
                                 s.productServiceId = response.entities[j].productid;
-                                ps.childServices.push(s);                               
+                                //ps.childServices.push(s); 
+                                thisRef.addToProductChildServiceArray(s,ps);                              
                             }
                         
                         },

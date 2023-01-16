@@ -12,6 +12,7 @@
     "refreshTypes": "pcf-scripts refreshTypes"
   },
   "dependencies": {
+    "d3": "^7.8.1"
   },
   "devDependencies": {
     "@microsoft/eslint-plugin-power-apps": "^0.2.6",
