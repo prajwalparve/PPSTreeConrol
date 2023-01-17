@@ -131,20 +131,16 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
         
-        await this.getPrograms();
+        let accountID = (<any>context.mode).contextInfo.entityId;
+        await this.getPrograms(accountID);
+
         for(let i=0; i<this._programs.length; i++){
                await this.getProductServices(this._programs[i]);
                for(let j = 0; j<this._programs[i].productService.length; j++){
                     if(this._programs[i].productService[j].isProduct)
                         await this.getProductChildServices(this._programs[i].productService[j]);
                }
-        }
-
-       
-        
-
-
-        
+        }        
 
         
 
@@ -162,16 +158,20 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
 
 
                     //data = data + "|------>" + this._programs[i].productService[j].productServiceName+'\r\n';
-                    data = data + "<li>" + this._programs[i].productService[j].productServiceName +"</li>";
+                    
 
                     if(this._programs[i].productService[j].isProduct)
                     {
+                        data = data + "<li><details><summary>" + this._programs[i].productService[j].productServiceName+"</summary>";
                         data  = data + "<ul>";
                         for(let k=0;k<this._programs[i].productService[j].childServices.length;k++){
                            // data = data + "       "+"|------>" + this._programs[i].productService[j].childServices[k].productServiceName+'\r\n';
                             data = data + "<li>" + this._programs[i].productService[j].childServices[k].productServiceName +" (Service)</li>";
                         }  
-                        data  = data + "</ul>";                 
+                        data  = data + "</ul></details></li>";                 
+                    }
+                    else{
+                        data = data + "<li>" + this._programs[i].productService[j].productServiceName +"</li>"; 
                     }
             }
 
@@ -186,14 +186,9 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
 
         var str = `
                         <ul class="tree">
-                        <li>
-                            <details open>
-                            <summary>Giant planets (Account)</summary> 
-                            <ul>`
+                        `
                              +   data +
-                            `</ul>
-                            </details>
-                        </li>
+                            `
                         </ul>
 
        `
@@ -206,14 +201,14 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
 
     }
 
-    public async getPrograms(): Promise<void> {
+    public async getPrograms(accountID:string): Promise<void> {
         
         let fetchXML: string = "<fetch distinct='false' mapping='logical'>";
         fetchXML += "<entity name='" + this._program + "'>";
         fetchXML += "<attribute name='prep_programid' />";
         fetchXML += "<attribute name='prep_name' />";
         fetchXML += "<filter type='and'>";
-        fetchXML += "<condition attribute='new_account' operator='eq' uiname='test' uitype='account' value='{ECB1D801-598F-ED11-AAD0-6045BDAF13B7}' />";
+        fetchXML += "<condition attribute='new_account' operator='eq' uiname='test' uitype='account' value='{"+accountID+"}' />";
         fetchXML += "</filter>";
         fetchXML += "</entity>";
         fetchXML += "</fetch>";
