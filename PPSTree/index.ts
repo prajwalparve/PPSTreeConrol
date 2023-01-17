@@ -77,7 +77,6 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
     }
 
     private _container: HTMLDivElement;
-    private _text: HTMLTextAreaElement;
     private tree: HTMLDivElement;
 
     private _notifyOutputChanged: () => void;
@@ -150,7 +149,7 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
 
             data = data + "<li><details>";
 
-            data = data +  "<summary>"+ this._programs[i].programName +" (Program) </summary> ";
+            data = data +  "<summary id = "+this._programs[i].programID+">"+ this._programs[i].programName +" (Program) </summary> ";
             
             data  = data + "<ul>";
 
@@ -162,16 +161,16 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
 
                     if(this._programs[i].productService[j].isProduct)
                     {
-                        data = data + "<li><details><summary>" + this._programs[i].productService[j].productServiceName+"</summary>";
+                        data = data + "<li><details><summary id = "+this._programs[i].productService[j].productServiceId+">" + this._programs[i].productService[j].productServiceName+"</summary>";
                         data  = data + "<ul>";
                         for(let k=0;k<this._programs[i].productService[j].childServices.length;k++){
                            // data = data + "       "+"|------>" + this._programs[i].productService[j].childServices[k].productServiceName+'\r\n';
-                            data = data + "<li>" + this._programs[i].productService[j].childServices[k].productServiceName +" (Service)</li>";
+                            data = data + "<li id = "+this._programs[i].productService[j].childServices[k].productServiceId+" >" + this._programs[i].productService[j].childServices[k].productServiceName +" (Service)</li>";
                         }  
                         data  = data + "</ul></details></li>";                 
                     }
                     else{
-                        data = data + "<li>" + this._programs[i].productService[j].productServiceName +"</li>"; 
+                        data = data + "<li id = "+this._programs[i].productService[j].productServiceId+">" + this._programs[i].productService[j].productServiceName +"</li>"; 
                     }
             }
 
@@ -197,7 +196,45 @@ export class PPSTree implements ComponentFramework.StandardControl<IInputs, IOut
          this.tree.innerHTML = str;
 
         this._container.appendChild(this.tree);
+
+
+
+        for(let i = 0; i<this._programs.length; i++){
+
+            document.getElementById(this._programs[i].programID)?.addEventListener("dblclick",event => {context.navigation.openForm({
+                entityName: this._program, 
+                entityId: this._programs[i].programID
+            })});
+
+            for(let j=0; j<this._programs[i].productService.length; j++){
+
+                    document.getElementById(this._programs[i].productService[j].productServiceId)?.addEventListener("dblclick",event => {context.navigation.openForm({
+                        entityName: this._productservice, 
+                        entityId: this._programs[i].productService[j].productServiceId
+                    })});
+
+                    if(this._programs[i].productService[j].isProduct)
+                    {
+                        for(let k=0;k<this._programs[i].productService[j].childServices.length;k++){
+                            document.getElementById(this._programs[i].productService[j].childServices[k].productServiceId)?.addEventListener("dblclick",event => {context.navigation.openForm({
+                                entityName: this._productservice, 
+                                entityId: this._programs[i].productService[j].childServices[k].productServiceId
+                            })});
+                        }  
+                                         
+                    }
+                    
+            }
+
+           
+
+        }
+
         
+
+    }
+
+    public openProgram(id:string){
 
     }
 
